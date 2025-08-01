@@ -26,6 +26,7 @@
         "vite": "^5.0"
     },
     "dependencies": {
+        "dayjs": "^1.11.13",
         "lucide-react": "^0.532.0",
         "react-icons": "^5.5.0",
         "react-toastify": "^11.0.5",

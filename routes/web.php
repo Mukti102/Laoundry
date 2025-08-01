@@ -28,7 +28,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/update-paid-status/{id}',[OrderController::class,'updatePaidStatus']);
     Route::get('/detail-order/{reference}',[OrderController::class,'review'])->name('order.review');
     Route::get('/success/{id}',[TransactionController::class,'success'])->name('payment.success');
-
+    
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

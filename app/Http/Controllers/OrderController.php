@@ -21,7 +21,11 @@ class OrderController extends Controller
      */
     public function index()
     {
-        //
+        $auth = Auth::user();
+        $orders = Order::with('user','service')->where('user_id',$auth->id)->get();
+        return Inertia::render('History/History',[
+            'orders' => $orders
+        ]);
     }
 
     /**
