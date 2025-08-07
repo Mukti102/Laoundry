@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use App\Filament\Resources\OrderResource\RelationManagers;
 use App\Models\Order;
 use App\Models\Service;
+use Filament\Tables\Actions\ActionGroup;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
@@ -15,6 +16,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Form;
 use Filament\Forms\Set;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\BadgeColumn;
@@ -24,6 +26,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class OrderResource extends Resource
 {
+
+    public static function getNavigationSort(): ?int
+    {
+        return 2;
+    }
     protected static ?string $model = Order::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cube';
@@ -174,8 +181,42 @@ class OrderResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                ActionGroup::make([
+
+                    Tables\Actions\EditAction::make()
+                        ->color('warning'),
+
+                    Tables\Actions\Action::make('updateStatus')
+                        ->color('info')
+                        ->label('Update Status')
+                        ->icon('heroicon-o-arrow-path')
+                        ->requiresConfirmation()
+                        ->form([
+                            Forms\Components\Select::make('status')
+                                ->label('Status Baru')
+                                ->options([
+                                    'menunggu' => 'Menunggu',
+                                    'dijemput' => 'Dijemput',
+                                    'diterima' => 'Diterima',
+                                    'diproses' => 'Diproses',
+                                    'selesai' => 'Selesai',
+                                    'diambil' => 'Diambil',
+                                ])
+                                ->required(),
+                        ])
+                        ->action(function (array $data, $record) {
+                            $record->status = $data['status'];
+                            $record->save();
+                            Notification::make()
+                                ->title('Berhasil Di Update')
+                                ->success()
+                                ->send();
+                        })
+                        ->modalHeading('Ubah Status')
+                        ->modalSubmitActionLabel('Simpan'),
+                ])
             ])
+
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

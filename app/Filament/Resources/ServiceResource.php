@@ -18,6 +18,10 @@ use Illuminate\Support\Str;
 
 class ServiceResource extends Resource
 {
+    public static function getNavigationSort(): ?int
+    {
+        return 1; // Services paling atas
+    }
     protected static ?string $model = Service::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -38,10 +42,15 @@ class ServiceResource extends Resource
                             ->readOnly()
                             ->required()
                             ->maxLength(255),
+                        Forms\Components\Select::make('unit_satuan')
+                            ->label('Unit Satuan')
+                            ->options([
+                                'kg' => 'Kg',
+                                'pcs' => 'Pcs'
+                            ]),
                         Forms\Components\TextInput::make('price_per_kg')
                             ->required()
-                            ->label('Harga Perkilo')
-                            ->suffix('Kg')
+                            ->label('Harga')
                             ->numeric(),
                         Forms\Components\FileUpload::make('image')
                             ->label('Gambar')
@@ -65,6 +74,11 @@ class ServiceResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('price_per_kg')
+                    ->label('Harga Satuan')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('unit_satuan')
+                    ->label('Unit Satuan')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')

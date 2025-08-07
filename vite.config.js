@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
 import path from 'path'; // <-- tambahkan ini
+import flowbiteReact from "flowbite-react/plugin/vite";
 
 export default defineConfig({
     resolve: {
@@ -9,11 +10,8 @@ export default defineConfig({
             'ziggy-js': path.resolve('vendor/tightenco/ziggy'),
         },
     },
-    plugins: [
-        laravel({
-            input: 'resources/js/app.jsx',
-            refresh: true,
-        }),
-        react(),
-    ],
+    plugins: [laravel({
+        input: 'resources/js/app.jsx',
+        refresh: true,
+    }), react(), flowbiteReact()],
 });

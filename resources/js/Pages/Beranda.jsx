@@ -1,6 +1,7 @@
 import Main from "@/Layouts/Main";
 import { formatRupiah } from "@/utils/method";
-import {route} from 'ziggy-js';
+import { route } from "ziggy-js";
+import logo from '../../../public/assets/logo.png'
 import {
     ChevronRight,
     Plus,
@@ -17,25 +18,36 @@ import {
     Zap,
     Droplets,
     Wind,
+    PlusIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "@inertiajs/react";
+import { Card } from "@/Components/Card";
+import { Header } from "@/Components/Header";
+import SmalCard from "@/Components/SmalCard";
 
-export default function Beranda({services}) {
+export default function Beranda({ services }) {
     const [currentSlide, setCurrentSlide] = useState(0);
-    const [currentTime, setCurrentTime] = useState(new Date());
+    const [isLoading, setIsLoading] = useState(true); // loading state
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
+        // Simulasi loading selama 1 detik
+        const timer = setTimeout(() => {
+            setIsLoading(false);
         }, 1000);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        
 
         const slideTimer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % promoSlides.length);
         }, 4000);
 
         return () => {
-            clearInterval(timer);
+            
             clearInterval(slideTimer);
         };
     }, []);
@@ -67,50 +79,29 @@ export default function Beranda({services}) {
         },
     ];
 
-   
+    
 
-    const formatTime = (date) => {
-        return date.toLocaleTimeString("en-US", {
-            hour12: false,
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-    };
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-white">
+                <div className="text-center">
+                    {/* <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin mx-auto mb-4"></div> */}
+                    <img src={logo} className="animate-bounce mt-0 w-28" alt="" />
+                    {/* <p className="text-sm text-gray-500">Loading...</p> */}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <Main>
-            <div className="bg-white/80  backdrop-blur-xl shadow-sm">
-                <div className="flex items-center justify-between p-6 pt-3">
-                    <div className="space-y-0">
-                        <h1 className="text-2xl font-bold text-primary">
-                            QuickWash
-                        </h1>
-                        <div className="flex items-center mt-1 text-gray-500 text-sm">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            <span>Surabaya, East Java</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                        <div className="text-right">
-                            <div className="text-lg font-bold text-gray-900">
-                                {formatTime(currentTime)}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                                Live Time
-                            </div>
-                        </div>
-                        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-lg">
-                            <User className="w-6 h-6 text-white" />
-                        </div>
-                    </div>
-                </div>
-            </div>
+           <Header/>
 
             {/* Enhanced Promotional Banner */}
             <div className="px-4 py-5">
-                <div className="relative overflow-hidden rounded-3xl shadow-2xl">
+                <div className="relative overflow-hidden rounded-3xl shadow-md">
                     <div
-                        className="flex transition-transform duration-500 ease-in-out"
+                        className="flex  transition-transform duration-500 ease-in-out"
                         style={{
                             transform: `translateX(-${currentSlide * 100}%)`,
                         }}
@@ -136,16 +127,16 @@ export default function Beranda({services}) {
                                     >
                                         {slide.subtitle}
                                     </p>
-                                    <button className="bg-white/20 backdrop-blur-sm text-white border border-white/30 px-6 py-3 rounded-full font-semibold text-sm hover:bg-white/30 transition-all duration-300 flex items-center">
+                                    <button className="hidden md:block bg-white/20 backdrop-blur-sm text-white border border-white/30 px-6 py-3 rounded-full font-semibold text-sm hover:bg-white/30 transition-all duration-300 flex items-center">
                                         Claim Offer
                                         <ChevronRight className="w-4 h-4 ml-2" />
                                     </button>
                                 </div>
-                                <div className="w-32 h-24 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center ml-6 shadow-xl">
+                                {/* <div className="w-32 h-24 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center ml-6 shadow-xl">
                                     <div className="w-20 h-20 bg-white/30 rounded-full flex items-center justify-center">
                                         <Sparkles className="w-10 h-10 text-white" />
                                     </div>
-                                </div>
+                                </div> */}
 
                                 {/* Decorative elements */}
                                 <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
@@ -174,52 +165,64 @@ export default function Beranda({services}) {
             <div className="px-4 mb-8">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base font-bold text-gray-800">
-                        LAYANAN KAMI
+                        Layanan Kami
                     </h3>
-                    <button className="text-primary font-medium text-sm flex items-center">
+                    <Link href={route('service.index')} className="text-primary font-medium text-sm flex items-center">
                         View All
                         <ChevronRight className="w-4 h-4 ml-1" />
-                    </button>
+                    </Link>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
-                    {services.map((service, index) => (
-                        <Link href={route('service.show',service.slug)}
-                            key={index}
-                            className={` rounded-2xl p-6 bg-white shadow-md border border-gray-300 text-center hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 cursor-pointer`}
-                        >
-                            <div className="flex w-12  mx-auto overflow-hidden  justify-center text-primary  items-center mb-2">
-                                <img className="w-full h-full object-cover" src={`/storage/${service.image}`} alt="" />
-                            </div>
-                            <h4 className="font-semibold text-gray-900 text-xs mb-1.5">
-                                {service.name}
-                            </h4>
-                            <p className={`text-[10px] font-semibold text-primary`}>
-                                {formatRupiah(service.price_per_kg)}/Kg
-                            </p>
-                        </Link>
-                    ))}
+                <div className="flex overflow-x-auto gap-4 scrollbar-hide px-1">
+                    {services
+                        .filter((item) => item.unit_satuan == "kg")
+                        .map((service, index) => (
+                          <SmalCard service={service}/>
+                        ))}
+                    {services
+                        .filter((item) => item.unit_satuan == "kg")
+                        .map((service, index) => (
+                          <SmalCard service={service}/>
+                        ))}
                 </div>
             </div>
 
             {/* Enhanced Active Orders */}
-            <div className="px-4 mb-32">
+            <div className="px-4 mb-10">
+                <div className="space-y-0 mb-3">
+                    <h3 className="text-base font-bold text-gray-900">
+                        Mau Order Apa Hari Ini ?
+                    </h3>
+                    <p className="text-sm text-gray-500 font-medium">
+                        Pilih Salah Satu
+                    </p>
+                </div>
+                <div className="grid grid-cols-2 gap-5">
+                    {services
+                        .filter((item) => item.unit_satuan !== "kg")
+                        .map((service) => (
+                            <Card key={service.id} service={service} />
+                        ))}
+                </div>
+            </div>
+
+            {/* <div className="px-4 mb-32">
                 <div className="space-y-0 mb-3">
                     <h3 className="text-base font-bold text-gray-900">
                         ORDERAN
                     </h3>
-                    <p className="text-sm text-gray-500 font-medium">Berdasrkan Orderan Kita</p>
+                    <p className="text-sm text-gray-500 font-medium">
+                        Berdasrkan Orderan Kita
+                    </p>
                 </div>
                 <div className="bg-white rounded-3xl p-8 text-center shadow-md border border-gray-100">
-                   
                     <h4 className="text-lg font-semibold text-gray-900 mb-2">
                         Tidak Ada Orderan Yg Aktif
                     </h4>
                     <p className="text-gray-400 text-sm mb-6">
                         Start your first laundry order today
                     </p>
-                    
                 </div>
-            </div>
+            </div> */}
         </Main>
     );
 }

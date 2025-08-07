@@ -13,6 +13,10 @@ class Order extends Model
     }
 
     public function service(){
-        return $this->belongsTo(Service::class);
+        return $this->belongsTo(Service::class,'service_id');
+    }
+
+    public function transaction(){
+        return $this->hasOne(Transaction::class,'order_id');
     }
 }

@@ -13,10 +13,10 @@ Route::get('/', function () {
     return Inertia::render('Beranda', [
         'services' => Service::all(),
     ]);
-});
+})->name('home');
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    redirect()->route('home');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('order',OrderController::class);
     Route::put('/update-paid-status/{id}',[OrderController::class,'updatePaidStatus']);
     Route::get('/detail-order/{reference}',[OrderController::class,'review'])->name('order.review');
+    Route::get('/order-detail/{reference}',[OrderController::class,'show'])->name('order.show');
     Route::get('/success/{id}',[TransactionController::class,'success'])->name('payment.success');
     
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

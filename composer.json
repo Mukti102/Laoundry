@@ -8,10 +8,13 @@
         "php": "^8.2",
         "filament/filament": "3.3",
         "inertiajs/inertia-laravel": "^2.0",
+        "joaopaulolndev/filament-edit-profile": "^1.0",
         "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "midtrans/midtrans-php": "^2.6",
+        "outerweb/filament-settings": "^1.3",
+        "outerweb/settings": "*",
         "tightenco/ziggy": "^2.5"
     },
     "require-dev": {

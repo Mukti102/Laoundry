@@ -5,10 +5,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@import 'flowbite';
+
 
 
 /* Terapkan font ke body */
 body {
   font-family: 'Poppins', sans-serif;
-  overflow-y: hidden;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

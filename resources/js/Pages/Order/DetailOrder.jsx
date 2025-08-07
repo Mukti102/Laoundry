@@ -71,11 +71,16 @@ function DetailOrder({ order, snapToken, clientKey }) {
     };
 
     return (
-        <Detail title="Detail Pesanan" buttonFoot={buttonFoot}>
+        <Detail
+            routeName="service.show"
+            routeParams={{ slug: order.service.slug }}
+            title="Detail Pesanan"
+            buttonFoot={buttonFoot}
+        >
             {/* Content */}
             <div className="max-w-md mx-auto px-4 py-1 space-y-4">
                 {/* Order Status */}
-                <div className="bg-white rounded-xl shadow-sm border p-4">
+                <div className="bg-white  rounded-xl shadow-sm border p-4">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                             <Receipt className="w-4 h-4 text-primary" />
@@ -125,6 +130,23 @@ function DetailOrder({ order, snapToken, clientKey }) {
                             <p className="font-semibold text-sm text-gray-600">
                                 {formatRupiah(order.total_price)}
                             </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* pesan */}
+                <div className="bg-white rounded-xl shadow-sm border">
+                    <div className="p-4 border-b">
+                        <h3 className="font-semibold text-base capitalize text-gray-700">
+                            Catatan
+                        </h3>
+                    </div>
+                    <div className="p-4 space-y-3">
+                        <div
+                            key="1"
+                            className="text-xs text-gray-700"
+                        >
+                            {order.notes}
                         </div>
                     </div>
                 </div>

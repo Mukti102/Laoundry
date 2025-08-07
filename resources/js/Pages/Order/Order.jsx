@@ -3,19 +3,21 @@ import TextInput from "@/Components/TextInput";
 import Detail from "@/Layouts/Detail";
 import { formatRupiah } from "@/utils/method";
 import { Dialog, Transition } from "@headlessui/react";
-import { Edit, Minus, Plus, X } from "lucide-react";
+import { ArrowLeft, Edit, Minus, Plus, X } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import useStore from "@/store/appStore";
-import { router } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import { toast } from "react-toastify";
 
 function Order({ service }) {
+    const { auth } = usePage().props;
+    const user = auth?.user;
     const [weight, setWeight] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [address, setAddress] = useState({
-        title: "Panti, Jember, Jawa Timur",
-        detail: "Jl. Rajawali No 45 Kemuningsari Lor 02 Panti, Jember, Jawa Timur",
+        title: `${user.kecamatan},${user.kota},${user.provinsi}`,
+        detail: user?.address,
     });
 
     const { setOrderData, order } = useStore();
@@ -36,7 +38,13 @@ function Order({ service }) {
     };
 
     useEffect(() => {
-        setOrderData({ serviceId: service.id });
+        setOrderData({
+            serviceId: service.id,
+            address: {
+                title: `${user.kecamatan},${user.kota},${user.provinsi}`,
+                detail: user.address,
+            },
+        });
     }, [service]);
 
     const handleSubmit = (e) => {
@@ -90,8 +98,8 @@ function Order({ service }) {
             onFinish: () => {
                 setLoading(false);
             },
-            onError: () => {
-                toast.error("error");
+            onError: (e) => {
+                toast.error(e[0]);
                 setLoading(false);
             },
             onSuccess: (page) => {
@@ -108,13 +116,42 @@ function Order({ service }) {
 
     return (
         <>
-            <Detail title={`Layanan ${service.name}`} buttonFoot={buttonFoot}>
-                <main className="p-4">
+            <Detail className=" text-white bg-white" buttonFoot={buttonFoot}>
+                <div className="pt-0 h-44 relative overflow-hidden">
+                    {/* Background image layer */}
+                    <div className="absolute inset-0 bg-[url('https://i.pinimg.com/1200x/ce/d3/2f/ced32f9c9c16f323dc47f564d764bd51.jpg')] bg-cover bg-center z-0"></div>
+
+                    {/* Overlay layer */}
+                    <div className="absolute inset-0 bg-black/50 z-10"></div>
+
+                    {/* Content layer (opsional) */}
+                    <div className="relative z-20 text-white space-y-3 p-3">
+                        <div className="flex gap-1 items-center">
+                            <Link
+                                href={route("home")}
+                                className=" transition-colors p-1"
+                            >
+                                <ArrowLeft size={20} />
+                            </Link>
+                            <h2 className="text-base font-semibold">
+                                {service.name}
+                            </h2>
+                        </div>
+                        <p className="text-gray-100 font-light text-[11px]">
+                            {service.description}
+                        </p>
+                    </div>
+                </div>
+
+                <main className="p-4 relative bottom-5 z-10 rounded-t-3xl bg-white">
                     <section className="space-y-6">
                         {/* Input Berat */}
                         <div className="space-y-2">
                             <h2 className="font-semibold text-gray-800 text-base">
-                                Masukkan Berat Kilo
+                                Masukkan{" "}
+                                {service.unit_satuan == "kg"
+                                    ? "Berat Kiloan"
+                                    : "Jumlah Satuan"}
                             </h2>
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-medium text-primary">
@@ -128,7 +165,7 @@ function Order({ service }) {
                                         <Minus width={16} height={16} />
                                     </button>
                                     <span className="text-sm font-medium text-gray-700">
-                                        {weight} Kg
+                                        {weight} {service.unit_satuan}
                                     </span>
                                     <button
                                         onClick={increase}
@@ -156,7 +193,7 @@ function Order({ service }) {
                                 </div>
                                 <button
                                     onClick={() => setIsOpen(true)}
-                                    className="text-primary"
+                                    className="text-primary relative z-20"
                                 >
                                     <Edit width={18} height={18} />
                                 </button>
@@ -164,7 +201,10 @@ function Order({ service }) {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2.5">
-                                    <InputLabel value="Tanggal Penjemputan" />
+                                    <InputLabel
+                                        className="text-xs"
+                                        value="Tanggal Penjemputan"
+                                    />
                                     <TextInput
                                         onChange={(e) =>
                                             setOrderData({
@@ -176,7 +216,10 @@ function Order({ service }) {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <InputLabel value="Waktu Penjemputan" />
+                                    <InputLabel
+                                        className="text-xs"
+                                        value="Waktu Penjemputan"
+                                    />
                                     <TextInput
                                         onChange={(e) =>
                                             setOrderData({
@@ -188,7 +231,10 @@ function Order({ service }) {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <InputLabel value="Tanggal Pengiriman" />
+                                    <InputLabel
+                                        className="text-xs"
+                                        value="Tanggal Pengiriman"
+                                    />
                                     <TextInput
                                         onChange={(e) =>
                                             setOrderData({
@@ -200,7 +246,10 @@ function Order({ service }) {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <InputLabel value="Waktu Pengiriman" />
+                                    <InputLabel
+                                        className="text-xs"
+                                        value="Waktu Pengiriman"
+                                    />
                                     <TextInput
                                         onChange={(e) =>
                                             setOrderData({
@@ -214,14 +263,17 @@ function Order({ service }) {
                             </div>
 
                             <div className="space-y-2">
-                                <InputLabel value="Catatan" />
+                                <InputLabel
+                                    className="text-xs"
+                                    value="Catatan"
+                                />
                                 <textarea
                                     rows={3}
                                     onChange={(e) =>
                                         setOrderData({ notes: e.target.value })
                                     }
                                     placeholder="Instruksi tambahan..."
-                                    className="w-full text-sm rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
+                                    className="w-full text-gray-900 text-sm rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
                                 />
                             </div>
                         </div>
@@ -233,7 +285,7 @@ function Order({ service }) {
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog
                     as="div"
-                    className="relative z-50"
+                    className="relative z-[9999]"
                     onClose={() => setIsOpen(false)}
                 >
                     <Transition.Child
@@ -275,26 +327,6 @@ function Order({ service }) {
                                     </div>
                                     <div className="space-y-4">
                                         <div className="space-y-1">
-                                            <InputLabel value="Label Lokasi" />
-                                            <TextInput
-                                                value={address.title}
-                                                onChange={(e) =>
-                                                    setAddress((prev) => {
-                                                        const updated = {
-                                                            ...prev,
-                                                            title: e.target
-                                                                .value,
-                                                        };
-                                                        setOrderData({
-                                                            address: updated,
-                                                        });
-                                                        return updated;
-                                                    })
-                                                }
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div className="space-y-1">
                                             <InputLabel value="Detail Alamat" />
                                             <textarea
                                                 rows={3}
@@ -319,9 +351,7 @@ function Order({ service }) {
                                             <button
                                                 onClick={() => {
                                                     setIsOpen(false);
-                                                    setOrderData({
-                                                        address: address,
-                                                    });
+                                                    setOrderData({ address });
                                                 }}
                                                 className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition"
                                             >

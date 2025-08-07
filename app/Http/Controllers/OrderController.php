@@ -22,8 +22,8 @@ class OrderController extends Controller
     public function index()
     {
         $auth = Auth::user();
-        $orders = Order::with('user','service')->where('user_id',$auth->id)->get();
-        return Inertia::render('History/History',[
+        $orders = Order::with('user', 'service')->where('user_id', $auth->id)->get();
+        return Inertia::render('History/History', [
             'orders' => $orders
         ]);
     }
@@ -40,7 +40,8 @@ class OrderController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
+    {   
+        
         $validated = $request->validate([
             'weight' => 'required',
             'address' => 'required',
@@ -51,6 +52,25 @@ class OrderController extends Controller
             'serviceId' => 'required',
             'notes' => 'nullable',
         ]);
+        
+        $user = Auth::user();
+        
+        // cek provinsi,kota,kecamatan user match with the address owner
+        $provinsi = setting('address.provinsi');
+        $kota = setting('address.kota');
+        $kecamatan = setting('address.kecamatan');
+        
+        $provinsiUser = $user->provinsi;
+        $kotaUser = $user->kota;
+        $kecamatanUser = $user->kecamatan;
+
+        if (
+            Str::lower($provinsiUser) !== Str::lower($provinsi) &&
+            Str::lower($kotaUser) !== Str::lower($kota)
+            ) {
+            return back()->withErrors('Kamu Berada Di Luar Kota, Transaksi Di Tolak');
+        }
+
 
         $service = Service::findOrFail($validated['serviceId']);
 
@@ -109,7 +129,7 @@ class OrderController extends Controller
 
     public function review($reference)
     {
-        $order = Order::where('reference', $reference)->first();
+        $order = Order::with('service')->where('reference', $reference)->first();
         $snapToken  = session('snaptoken');
         $midtrants_client_key = config('payment.midtrans.client_key');
         return Inertia::render('Order/DetailOrder', [
@@ -143,7 +163,7 @@ class OrderController extends Controller
                 'data' => $transaction,
             ], 200);
         } catch (Exception $e) {
-            Log::info('error transaction',['message' => $e->getMessage()]);
+            Log::info('error transaction', ['message' => $e->getMessage()]);
             return response()->json([
                 'message' => 'error',
             ]);
@@ -153,7 +173,13 @@ class OrderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Order $order) {}
+    public function show($reference)
+    {
+        $order = Order::with('transaction', 'service')->where('reference', $reference)->first();
+        return Inertia::render('Order/Show', [
+            'order' => $order
+        ]);
+    }
 
     /**
      * Show the form for editing the specified resource.
