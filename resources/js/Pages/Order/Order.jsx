@@ -6,8 +6,9 @@ import { Dialog, Transition } from "@headlessui/react";
 import { ArrowLeft, Edit, Minus, Plus, X } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import useStore from "@/store/appStore";
-import { Link, router, usePage } from "@inertiajs/react";
+import { Head, Link, router, usePage } from "@inertiajs/react";
 import { toast } from "react-toastify";
+import { Header } from "@/Components/Header";
 
 function Order({ service }) {
     const { auth } = usePage().props;
@@ -116,6 +117,7 @@ function Order({ service }) {
 
     return (
         <>
+            <Head title={service.name}/>
             <Detail className=" text-white bg-white" buttonFoot={buttonFoot}>
                 <div className="pt-0 h-44 relative overflow-hidden">
                     {/* Background image layer */}

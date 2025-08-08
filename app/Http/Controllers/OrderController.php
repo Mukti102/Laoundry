@@ -14,6 +14,8 @@ use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Midtrans\Snap;
 
+use function Pest\Laravel\json;
+
 class OrderController extends Controller
 {
     /**
@@ -40,8 +42,8 @@ class OrderController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {   
-        
+    {
+
         $validated = $request->validate([
             'weight' => 'required',
             'address' => 'required',
@@ -52,22 +54,23 @@ class OrderController extends Controller
             'serviceId' => 'required',
             'notes' => 'nullable',
         ]);
-        
+
         $user = Auth::user();
-        
+
         // cek provinsi,kota,kecamatan user match with the address owner
         $provinsi = setting('address.provinsi');
         $kota = setting('address.kota');
         $kecamatan = setting('address.kecamatan');
-        
+
         $provinsiUser = $user->provinsi;
         $kotaUser = $user->kota;
         $kecamatanUser = $user->kecamatan;
 
+
         if (
-            Str::lower($provinsiUser) !== Str::lower($provinsi) &&
+            Str::lower($provinsiUser) !== Str::lower($provinsi) ||
             Str::lower($kotaUser) !== Str::lower($kota)
-            ) {
+        ) {
             return back()->withErrors('Kamu Berada Di Luar Kota, Transaksi Di Tolak');
         }
 
@@ -88,8 +91,8 @@ class OrderController extends Controller
         $validated['reference'] = 'ORD-' . now()->format('Ymd') . '-' . strtoupper(Str::random(10));
 
 
-        \Midtrans\Config::$serverKey =  config('payment.midtrans.server_key');
-        \Midtrans\Config::$isProduction =  config('payment.midtrans.isProduction');
+        \Midtrans\Config::$serverKey = setting('payment.server_key') ??  config('payment.midtrans.server_key');
+        \Midtrans\Config::$isProduction = setting('payment.is_production') ??  config('payment.midtrans.isProduction');
         \Midtrans\Config::$isSanitized =  config('payment.midtrans.isSanitized');
         \Midtrans\Config::$is3ds =  config('payment.midtrans.is3ds');
 
@@ -117,12 +120,13 @@ class OrderController extends Controller
 
 
             session(['snaptoken' => $snapToken]); // ✅ simpan benar ke session
-
+            $order->snaptoken = $snapToken;
+            $order->save();
 
             return to_route('order.review', $order->reference);
         } catch (Exception $e) {
             Log::info('error', ['message' => $e->getMessage()]);
-            return back()->with('error', 'Gagal');
+            return back()->withErrors('Gagal Membuat Transaksi');
         }
     }
 
@@ -130,14 +134,26 @@ class OrderController extends Controller
     public function review($reference)
     {
         $order = Order::with('service')->where('reference', $reference)->first();
-        $snapToken  = session('snaptoken');
-        $midtrants_client_key = config('payment.midtrans.client_key');
+        $snapToken  = session('snaptoken') ?? $order->snaptoken;
+        $midtrants_client_key = setting('payment.client_key') ?? config('payment.midtrans.client_key');
+        $isProduction = setting('payment.is_production') ?? config('payment.midtrans.is_production');
         return Inertia::render('Order/DetailOrder', [
             'order' => $order,
             'snapToken' => $snapToken,
-            'clientKey' => $midtrants_client_key
+            'clientKey' => $midtrants_client_key,
+            'isProduction' => $isProduction
         ]);
     }
+
+    public function getReviewer($id)
+    {
+        $reviewer = Order::with('user','service')->whereHas('service',function($query) use($id){
+            $query->where('id',$id);
+        })->get(['rating', 'review', 'user_id','service_id']);
+        return response()->json($reviewer);
+    }
+
+
 
     public function updatePaidStatus(Request $request, $id)
     {
@@ -179,6 +195,23 @@ class OrderController extends Controller
         return Inertia::render('Order/Show', [
             'order' => $order
         ]);
+    }
+
+
+    public function rating(Request $request, $id)
+    {
+        $order = Order::find($id);
+        $validated = $request->validate([
+            'rating' => 'required',
+            'review' => 'required'
+        ]);
+
+        $order->rating = $validated['rating'];
+        $order->review = $validated['review'];
+        $order->status = 'diambil';
+
+        $order->save();
+        return back()->with('success', 'Ulasan Berhasil Di Simpan');
     }
 
     /**

@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title inertia>{{ config('app.name', 'Laravel') }}</title>
+    <title inertia>{{ setting('seo.title', config('app.name', 'Laravel')) }}</title>
+    <meta name="description" content="{{ setting('seo.description', 'Deskripsi default website') }}">
+    <meta name="keywords" content="{{ setting('seo.keywords', 'laundry, cepat, terjangkau') }}">
 
     <!-- Scripts -->
     @routes

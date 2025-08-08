@@ -7,7 +7,10 @@ use Filament\Forms\Components\Card;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
+use Illuminate\Support\Facades\Http;
 use Outerweb\FilamentSettings\Filament\Pages\Settings as BaseSettings;
 
 class Settings extends BaseSettings
@@ -78,15 +81,80 @@ class Settings extends BaseSettings
                         ->schema([
                             Card::make()
                                 ->schema([
-                                    TextInput::make('adrress.provinsi')
-                                        ->helperText('Contoh : Jawa Timur')
-                                        ->label('Provinsi'),
-                                    TextInput::make('adrress.kota')
-                                        ->helperText('Contoh : Jakarta')
-                                        ->label('Kota/Kabupaten'),
-                                    TextInput::make('adrress.kecamatan')
-                                        ->helperText('Contoh : Panti')
-                                        ->label('Kecamatan'),
+                                    Select::make('address.provinsi')
+                                        ->label('Provinsi')
+                                        ->helperText('Contoh: Jawa Timur')
+                                        ->options(function () {
+                                            $response = Http::get("https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json");
+
+                                            if ($response->successful()) {
+                                                return collect($response->json())
+                                                    ->pluck('name', 'name') // pakai name sebagai key dan value
+                                                    ->toArray();
+                                            }
+
+                                            return [];
+                                        })
+                                        ->reactive(),
+                                    Select::make('address.kota')
+                                        ->label('Kota/Kabupaten')
+                                        ->helperText('Contoh: Surabaya')
+                                        ->options(function (callable $get) {
+                                            $provinsiName = $get('address.provinsi');
+
+                                            if (!$provinsiName) return [];
+
+                                            // Ambil semua provinsi untuk cari ID berdasarkan name
+                                            $provinsi = Http::get("https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json")->collect()
+                                                ->firstWhere('name', $provinsiName);
+
+                                            if (!$provinsi) return [];
+
+                                            $response = Http::get("https://www.emsifa.com/api-wilayah-indonesia/api/regencies/{$provinsi['id']}.json");
+
+                                            if ($response->successful()) {
+                                                return collect($response->json())
+                                                    ->pluck('name', 'name')
+                                                    ->toArray();
+                                            }
+
+                                            return [];
+                                        })
+                                        ->reactive()
+                                        ->disabled(fn(callable $get) => !$get('address.provinsi')),
+
+
+                                    Select::make('address.kecamatan')
+                                        ->label('Kecamatan')
+                                        ->helperText('Contoh: Panti')
+                                        ->options(function (callable $get) {
+                                            $kotaName = $get('address.kota');
+
+                                            if (!$kotaName) return [];
+
+                                            // Ambil semua kota dari provinsi yang dipilih
+                                            $provinsiName = $get('address.provinsi');
+                                            if (!$provinsiName) return [];
+
+                                            $provinsi = Http::get("https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json")->collect()
+                                                ->firstWhere('name', $provinsiName);
+                                            if (!$provinsi) return [];
+
+                                            $kota = Http::get("https://www.emsifa.com/api-wilayah-indonesia/api/regencies/{$provinsi['id']}.json")->collect()
+                                                ->firstWhere('name', $kotaName);
+                                            if (!$kota) return [];
+
+                                            $response = Http::get("https://www.emsifa.com/api-wilayah-indonesia/api/districts/{$kota['id']}.json");
+
+                                            if ($response->successful()) {
+                                                return collect($response->json())
+                                                    ->pluck('name', 'name')
+                                                    ->toArray();
+                                            }
+
+                                            return [];
+                                        })
+                                        ->disabled(fn(callable $get) => !$get('address.kota')),
                                     TextInput::make('contact.address')
                                         ->helperText('Contoh : Jl.Rajawali No 45,Panti,Jember,Jawa Timur')
                                         ->label('Alamat Lengkap')
@@ -124,6 +192,25 @@ class Settings extends BaseSettings
                                         ->label('YouTube URL')
                                         ->url()
                                         ->maxLength(255),
+                                ]),
+                        ]),
+                    Tabs\Tab::make('Payment Gateaway')
+                        ->schema([
+                            Card::make()
+                                ->schema([
+                                    TextInput::make('payment.merchant_id')
+                                        ->label('Merchant ID')
+                                        ->nullable(),
+                                    TextInput::make('payment.client_key')
+                                        ->label('Client Key')
+                                        ->nullable(),
+                                    TextInput::make('payment.server_key')
+                                        ->label('Server Key')
+                                        ->nullable(),
+                                    Toggle::make('payment.is_production')
+                                        ->label('Production')
+                                        ->default(false)
+                                        ->nullable(),
                                 ]),
                         ]),
                 ]),

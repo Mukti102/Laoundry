@@ -29,7 +29,7 @@ export const percentageStatus = (status) => {
         case "diantar":
             return 90;
             break;
-        case "dimbil":
+        case "diambil":
             return 100;
             break;
         default:

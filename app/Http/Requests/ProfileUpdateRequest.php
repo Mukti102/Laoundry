@@ -29,6 +29,7 @@ class ProfileUpdateRequest extends FormRequest
             'kota' => ['required'],
             'kecamatan' => ['required'],
             'address' => ['required'],
+            'avatar' => ['nullable','max:2025'],
         ];
     }
 }

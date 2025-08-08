@@ -11,6 +11,7 @@ use App\Models\Service;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
@@ -23,6 +24,7 @@ use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use ViewOrder;
 
 class OrderResource extends Resource
 {
@@ -125,6 +127,19 @@ class OrderResource extends Resource
                             ->label('Alamat Lengkap')
                             ->placeholder('JL.Rajawali Kemuningsari lor 02 Jember Jawa timur Depan Toko Bangunan')
                             ->columnSpanFull(),
+                        Radio::make('rating')
+                            ->label('Rating')
+                            ->options([
+                                '1' => '⭐',
+                                '2' => '⭐⭐',
+                                '3' => '⭐⭐⭐',
+                                '4' => '⭐⭐⭐⭐',
+                                '5' => '⭐⭐⭐⭐⭐',
+                            ])
+                            ->inline()
+                            ->required(),
+                        Forms\Components\Textarea::make('review')
+                            ->label('Ulasan User'),
                     ])->columns(2)
 
             ]);
@@ -134,6 +149,10 @@ class OrderResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->numeric()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->numeric()
                     ->sortable(),
@@ -168,6 +187,13 @@ class OrderResource extends Resource
                 Tables\Columns\IconColumn::make('is_paid')
                     ->label('Status Pembayaran')
                     ->boolean(),
+                Tables\Columns\TextColumn::make('rating')
+                    ->label('Rating')
+                    ->formatStateUsing(function ($state) {
+                        $rating = (int) $state;
+                        return str_repeat('⭐', $rating);
+                    }),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -182,7 +208,7 @@ class OrderResource extends Resource
             ])
             ->actions([
                 ActionGroup::make([
-
+                    Tables\Actions\ViewAction::make()->label('Lihat')->color('primary'),
                     Tables\Actions\EditAction::make()
                         ->color('warning'),
 
@@ -200,6 +226,7 @@ class OrderResource extends Resource
                                     'diterima' => 'Diterima',
                                     'diproses' => 'Diproses',
                                     'selesai' => 'Selesai',
+                                    'diantar' => 'Di Antar',
                                     'diambil' => 'Diambil',
                                 ])
                                 ->required(),
@@ -237,6 +264,7 @@ class OrderResource extends Resource
             'index' => Pages\ListOrders::route('/'),
             'create' => Pages\CreateOrder::route('/create'),
             'edit' => Pages\EditOrder::route('/{record}/edit'),
+            'view' => ViewOrder::route('/{record}'), // 👈 Tambahkan ini
         ];
     }
 }

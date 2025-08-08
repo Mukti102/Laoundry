@@ -14,6 +14,7 @@ Route::get('/', function () {
         'services' => Service::all(),
     ]);
 })->name('home');
+Route::get('/get-reviewer/{id}',[OrderController::class,'getReviewer'])->name('getReviewer');
 
 Route::get('/dashboard', function () {
     redirect()->route('home');
@@ -22,16 +23,18 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     Route::resource('service', ServiceController::class);
     Route::get('/service/{service:slug}', [ServiceController::class, 'show'])->name('service.show');
-
+    
     // pesanan
     Route::resource('order',OrderController::class);
     Route::put('/update-paid-status/{id}',[OrderController::class,'updatePaidStatus']);
     Route::get('/detail-order/{reference}',[OrderController::class,'review'])->name('order.review');
     Route::get('/order-detail/{reference}',[OrderController::class,'show'])->name('order.show');
     Route::get('/success/{id}',[TransactionController::class,'success'])->name('payment.success');
+    Route::post('/review/{id}',[OrderController::class,'rating'])->name('review.store');
+    // api
     
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 

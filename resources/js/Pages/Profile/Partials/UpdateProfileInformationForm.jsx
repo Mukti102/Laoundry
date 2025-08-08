@@ -5,7 +5,17 @@ import TextInput from "@/Components/TextInput";
 import { Transition } from "@headlessui/react";
 import { Link, useForm, usePage } from "@inertiajs/react";
 import { useState, useEffect } from "react";
-import { User, Mail, Camera, CheckCircle, AlertCircle } from "lucide-react";
+import {
+    User,
+    Mail,
+    Camera,
+    CheckCircle,
+    AlertCircle,
+    Edit,
+    Edit2Icon,
+    Edit2,
+} from "lucide-react";
+import axios from "axios";
 
 export default function UpdateProfileInformation({
     mustVerifyEmail,
@@ -22,19 +32,168 @@ export default function UpdateProfileInformation({
         return () => clearTimeout(timer);
     }, []);
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } =
+    const { data, setData, patch,post, errors, processing, recentlySuccessful } =
         useForm({
             name: user.name,
+            avatar: "",
             email: user.email,
-            provinsi: user.provinsi,
-            kota: user.kota,
-            kecamatan: user.kecamatan,
-            address: user.address,
+            provinsi: user.provinsi || "",
+            kota: user.kota || "",
+            kecamatan: user.kecamatan || "",
+            address: user.address || "",
         });
 
     const submit = (e) => {
         e.preventDefault();
-        patch(route("profile.update"));
+
+
+        post(route("profile.update"), {
+            _method: "patch", // biar tetap ke method PATCH di Laravel
+            preserveScroll: true,
+        });
+    };
+
+    const [provinces, setProvinces] = useState([]);
+    const [regencies, setRegencies] = useState([]);
+    const [districts, setDistricts] = useState([]);
+
+    const [selectedProvince, setSelectedProvince] = useState(
+        user.provinsi || "",
+    );
+    const [selectedRegency, setSelectedRegency] = useState(user.kota || "");
+    const [selectedDistrict, setSelectedDistrict] = useState(
+        user.kecamatan || "",
+    );
+
+    useEffect(() => {
+        // Fetch Provinsi
+        fetch("https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json")
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return res.json();
+            })
+            .then((data) => {
+                setProvinces(data);
+            })
+            .catch((err) => {
+                console.log("error", err);
+            });
+    }, []);
+
+    useEffect(() => {
+        const fetchRegencies = async () => {
+            if (selectedProvince) {
+                try {
+                    const res = await fetch(
+                        `https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${selectedProvince}.json`,
+                    );
+                    if (!res.ok) {
+                        throw new Error("Failed to fetch regencies");
+                    }
+                    const data = await res.json();
+                    setRegencies(data);
+                } catch (error) {
+                    console.error("Error fetching regencies:", error);
+                }
+            } else {
+                setRegencies([]);
+            }
+
+            // Reset regency dan district jika province berubah
+            if (selectedProvince !== user.provinsi) {
+                setSelectedRegency("");
+                setDistricts([]);
+                setSelectedDistrict("");
+                // Update form data
+                setData((prevData) => ({
+                    ...prevData,
+                    kota: "",
+                    kecamatan: "",
+                }));
+            }
+        };
+
+        fetchRegencies();
+    }, [selectedProvince]);
+
+    useEffect(() => {
+        const fetchDistricts = async () => {
+            if (selectedRegency) {
+                try {
+                    const res = await fetch(
+                        `https://www.emsifa.com/api-wilayah-indonesia/api/districts/${selectedRegency}.json`,
+                    );
+                    if (!res.ok) {
+                        throw new Error("Failed to fetch districts");
+                    }
+                    const data = await res.json();
+                    setDistricts(data);
+                } catch (error) {
+                    console.error("Error fetching districts:", error);
+                }
+            } else {
+                setDistricts([]);
+            }
+
+            // Reset district jika regency berubah
+            if (selectedRegency !== user.kota) {
+                setSelectedDistrict("");
+                // Update form data
+                setData((prevData) => ({
+                    ...prevData,
+                    kecamatan: "",
+                }));
+            }
+        };
+
+        fetchDistricts();
+    }, [selectedRegency]);
+
+    // Handler untuk update province
+    const handleProvinceChange = (e) => {
+        const provinceId = e.target.value;
+        setSelectedProvince(provinceId);
+
+        // Update form data dengan nama provinsi
+        const selectedProvinceData = provinces.find(
+            (prov) => prov.id === provinceId,
+        );
+        setData((prevData) => ({
+            ...prevData,
+            provinsi: selectedProvinceData ? selectedProvinceData.name : "",
+        }));
+    };
+
+    // Handler untuk update regency
+    const handleRegencyChange = (e) => {
+        const regencyId = e.target.value;
+        setSelectedRegency(regencyId);
+
+        // Update form data dengan nama regency
+        const selectedRegencyData = regencies.find(
+            (reg) => reg.id === regencyId,
+        );
+        setData((prevData) => ({
+            ...prevData,
+            kota: selectedRegencyData ? selectedRegencyData.name : "",
+        }));
+    };
+
+    // Handler untuk update district
+    const handleDistrictChange = (e) => {
+        const districtId = e.target.value;
+        setSelectedDistrict(districtId);
+
+        // Update form data dengan nama district
+        const selectedDistrictData = districts.find(
+            (dis) => dis.id === districtId,
+        );
+        setData((prevData) => ({
+            ...prevData,
+            kecamatan: selectedDistrictData ? selectedDistrictData.name : "",
+        }));
     };
 
     return (
@@ -74,9 +233,9 @@ export default function UpdateProfileInformation({
                                 : "scale-75 opacity-0"
                         }`}
                     >
-                        <div className="w-24 h-24 mx-auto rounded-full border-4 border-white/30 shadow-2xl overflow-hidden bg-white">
+                        <div className="w-24 h-24 relative mx-auto rounded-full border-4 border-white/30 shadow-2xl overflow-hidden bg-white">
                             <img
-                                src="https://i.pinimg.com/736x/0f/68/94/0f6894e539589a50809e45833c8bb6c4.jpg"
+                                src={user.avatar_url ? `storage/${user.avatar_url}` : 'https://i.pinimg.com/736x/0f/68/94/0f6894e539589a50809e45833c8bb6c4.jpg'}
                                 className="w-full h-full object-cover"
                                 alt="Profile"
                             />
@@ -110,7 +269,11 @@ export default function UpdateProfileInformation({
                         : "translate-y-8 opacity-0"
                 }`}
             >
-                <form onSubmit={submit} className="space-y-6">
+                <form
+                    onSubmit={submit}
+                    encType="multipart/form-data"
+                    className="space-y-6"
+                >
                     {/* Name Field */}
                     <div
                         className={`space-y-2 transform transition-all duration-600 delay-700 ${
@@ -171,6 +334,8 @@ export default function UpdateProfileInformation({
                             message={errors.email}
                         />
                     </div>
+
+                    {/* Province Field */}
                     <div
                         className={`space-y-2 transform transition-all duration-600 delay-750 ${
                             isLoaded
@@ -186,23 +351,26 @@ export default function UpdateProfileInformation({
                             <Mail className="w-4 h-4 text-gray-500" />
                             Provinsi
                         </InputLabel>
-                        <TextInput
+                        <select
                             id="provinsi"
-                            type="text"
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 bg-gray-50/50 hover:bg-white"
-                            value={data.provinsi}
-                            onChange={(e) =>
-                                setData("provinsi", e.target.value)
-                            }
-                            required
-                            autoComplete="username"
-                            placeholder="Jawa Timur"
-                        />
+                            value={selectedProvince}
+                            onChange={handleProvinceChange}
+                        >
+                            <option value="">-- Pilih Provinsi --</option>
+                            {provinces.map((prov) => (
+                                <option key={prov.id} value={prov.id}>
+                                    {prov.name}
+                                </option>
+                            ))}
+                        </select>
                         <InputError
                             className="text-xs"
                             message={errors.provinsi}
                         />
                     </div>
+
+                    {/* Regency Field */}
                     <div
                         className={`space-y-2 transform transition-all duration-600 delay-750 ${
                             isLoaded
@@ -212,27 +380,30 @@ export default function UpdateProfileInformation({
                     >
                         <InputLabel
                             htmlFor="kota"
-                            value="
-                            Kabupaten/Kota
-                            
-                            "
+                            value="Kabupaten/Kota"
                             className="text-gray-700 font-medium text-sm flex items-center gap-2"
                         >
                             <Mail className="w-4 h-4 text-gray-500" />
                             Kabupaten/Kota
                         </InputLabel>
-                        <TextInput
+                        <select
                             id="kota"
-                            type="kota"
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 bg-gray-50/50 hover:bg-white"
-                            value={data.kota}
-                            onChange={(e) => setData("kota", e.target.value)}
-                            required
-                            autoComplete="username"
-                            placeholder="Surabaya"
-                        />
+                            value={selectedRegency}
+                            onChange={handleRegencyChange}
+                            disabled={!selectedProvince}
+                        >
+                            <option value="">-- Pilih Kabupaten/Kota --</option>
+                            {regencies.map((reg) => (
+                                <option key={reg.id} value={reg.id}>
+                                    {reg.name}
+                                </option>
+                            ))}
+                        </select>
                         <InputError className="text-xs" message={errors.kota} />
                     </div>
+
+                    {/* District Field */}
                     <div
                         className={`space-y-2 transform transition-all duration-600 delay-750 ${
                             isLoaded
@@ -242,31 +413,33 @@ export default function UpdateProfileInformation({
                     >
                         <InputLabel
                             htmlFor="kecamatan"
-                            value="
-                            Kecamatan
-                            "
+                            value="Kecamatan"
                             className="text-gray-700 font-medium text-sm flex items-center gap-2"
                         >
                             <Mail className="w-4 h-4 text-gray-500" />
                             Kecamatan
                         </InputLabel>
-                        <TextInput
+                        <select
                             id="kecamatan"
-                            type="kecamatan"
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 bg-gray-50/50 hover:bg-white"
-                            value={data.kecamatan}
-                            onChange={(e) =>
-                                setData("kecamatan", e.target.value)
-                            }
-                            required
-                            autoComplete="username"
-                            placeholder="Silo"
-                        />
+                            value={selectedDistrict}
+                            onChange={handleDistrictChange}
+                            disabled={!selectedRegency}
+                        >
+                            <option value="">-- Pilih Kecamatan --</option>
+                            {districts.map((dis) => (
+                                <option key={dis.id} value={dis.id}>
+                                    {dis.name}
+                                </option>
+                            ))}
+                        </select>
                         <InputError
                             className="text-xs"
                             message={errors.kecamatan}
                         />
                     </div>
+
+                    {/* Address Field */}
                     <div
                         className={`space-y-2 transform transition-all duration-600 delay-750 ${
                             isLoaded
@@ -276,28 +449,54 @@ export default function UpdateProfileInformation({
                     >
                         <InputLabel
                             htmlFor="address"
-                            value="
-                            Alamat Lengkap
-                            "
+                            value="Alamat Lengkap"
                             className="text-gray-700 font-medium text-sm flex items-center gap-2"
                         >
                             <Mail className="w-4 h-4 text-gray-500" />
                             Alamat
                         </InputLabel>
                         <textarea
+                            id="address"
                             placeholder="Jl.Rajawali No 45 , Silo , Surabaya , Jawa Timur , Depan Masjid Jami'"
                             value={data.address}
-                            onChange={(e) =>
-                                setData("address", e.target.value)
-                            }
+                            onChange={(e) => setData("address", e.target.value)}
                             rows={3}
-                            className="
-                        w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 bg-gray-50/50 hover:bg-white
-                        "
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 bg-gray-50/50 hover:bg-white"
                         ></textarea>
                         <InputError
                             className="text-xs"
-                            message={errors.kecamatan}
+                            message={errors.address}
+                        />
+                    </div>
+
+                    {/* Avatar Field */}
+                    <div
+                        className={`space-y-2 transform transition-all duration-600 delay-750 ${
+                            isLoaded
+                                ? "translate-x-0 opacity-100"
+                                : "translate-x-8 opacity-0"
+                        }`}
+                    >
+                        <InputLabel
+                            htmlFor="avatar"
+                            value="Photo Profile"
+                            className="text-gray-700 font-medium text-sm flex items-center gap-2"
+                        >
+                            <Camera className="w-4 h-4 text-gray-500" />
+                            Photo Profile
+                        </InputLabel>
+                        <input
+                            id="avatar"
+                            type="file"
+                            accept="image/*"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-300 bg-gray-50/50 hover:bg-white"
+                            onChange={(e) =>
+                                setData("avatar", e.target.files[0])
+                            }
+                        />
+                        <InputError
+                            className="text-xs"
+                            message={errors.avatar}
                         />
                     </div>
 
@@ -362,8 +561,6 @@ export default function UpdateProfileInformation({
                                 </div>
                             )}
                         </PrimaryButton>
-
-                        {/* Success Message */}
                     </div>
 
                     {/* Additional Info */}

@@ -139,12 +139,12 @@ export default function Services({ services }) {
                         <div
                             className={`${
                                 viewMode === "grid"
-                                    ? "grid grid-cols-3 gap-3"
-                                    : "grid grid-cols-2 gap-4"
-                            } transition-all duration-500`}
+                                    ? "grid grid-cols-3 gap-4  "
+                                    : "grid grid-cols-2 gap-3 "
+                            } transition-all   duration-500`}
                         >
                             {filteredServices.map((service, index) => (
-                                <SmallCard service={service} />
+                                <SmallCard className='w-full'  service={service} />
                             ))}
                         </div>
                     ) : (

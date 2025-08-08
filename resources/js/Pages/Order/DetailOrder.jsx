@@ -6,13 +6,11 @@ import { CreditCard, Receipt } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 
-function DetailOrder({ order, snapToken, clientKey }) {
-    console.log(order, snapToken, clientKey);
-
+function DetailOrder({ order, snapToken, clientKey,isProduction }) {
     useEffect(() => {
         // Load Midtrans Snap.js when component mounts
         const script = document.createElement("script");
-        script.src = "https://app.sandbox.midtrans.com/snap/snap.js";
+        script.src = isProduction ? "https://app.midtrans.com/snap/snap.js"  : "https://app.sandbox.midtrans.com/snap/snap.js";
         script.setAttribute("data-client-key", clientKey); // pakai .env
         script.async = true;
         document.body.appendChild(script);
@@ -22,7 +20,6 @@ function DetailOrder({ order, snapToken, clientKey }) {
         if (window.snap && snapToken) {
             window.snap.pay(snapToken, {
                 onSuccess: function (result) {
-                    console.log("Payment success:", result);
                     // update status pembayaran
                     // Kirim request ke backend untuk update status
                     axios
@@ -33,10 +30,7 @@ function DetailOrder({ order, snapToken, clientKey }) {
                             status: result.transaction_status,
                         })
                         .then((response) => {
-                            console.log(
-                                "Status pembayaran diperbarui:",
-                                response.data,
-                            );
+                          
                             // Redirect ke halaman sukses
                             toast.success("payment successfull");
                             router.get(`/success/${response.data.data.id}`);
@@ -124,7 +118,7 @@ function DetailOrder({ order, snapToken, clientKey }) {
                         >
                             <div className="flex-1">
                                 <p className="text-sm text-gray-500">
-                                    {order.weight} Kg
+                                    {order.weight} {order.service.unit_satuan}
                                 </p>
                             </div>
                             <p className="font-semibold text-sm text-gray-600">

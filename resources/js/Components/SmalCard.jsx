@@ -1,13 +1,14 @@
+import { cn } from "@/utils/method";
 import { Link } from "@inertiajs/react";
 import { route } from "ziggy-js";
 
-export default function SmallCard({ service }) {
+export default function SmallCard({ service,className }) {
     return (
         <>
             <Link
                 href={route("service.show", service.slug)}
                 key={service.id}
-                className="group relative min-w-[120px] flex-shrink-0 rounded-xl p-4 bg-white shadow-sm border border-gray-100 text-center hover:shadow-xs transition-all duration-200 cursor-pointer hover:border-primary-50 hover:bg-primary-50 overflow-hidden"
+                className={cn("group relative  flex-shrink-0 rounded-xl p-4 bg-white shadow-sm border border-gray-100 text-center hover:shadow-xs transition-all duration-200 cursor-pointer hover:border-primary-50 hover:bg-primary-50 overflow-hidden",className)}
             >
                 {/* Image with subtle shine effect on hover */}
                 <div className="flex w-14 h-14 mx-auto mb-2 overflow-hidden rounded-lg bg-gray-50 justify-center items-center p-1.5 group-hover:bg-white transition-all duration-300 relative">
