@@ -59,7 +59,7 @@ class ServiceResource extends Resource
                             ->maxSize(2025)
                             ->imageEditor()
                             ->required(),
-                        Forms\Components\Textarea::make('description')
+                        Forms\Components\RichEditor::make('description')
                             ->columnSpanFull(),
                     ])->columns(2)
             ]);

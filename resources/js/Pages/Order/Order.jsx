@@ -9,6 +9,7 @@ import useStore from "@/store/appStore";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { toast } from "react-toastify";
 import { Header } from "@/Components/Header";
+import parse from "html-react-parser";
 
 function Order({ service }) {
     const { auth } = usePage().props;
@@ -117,7 +118,7 @@ function Order({ service }) {
 
     return (
         <>
-            <Head title={service.name}/>
+            <Head title={service.name} />
             <Detail className=" text-white bg-white" buttonFoot={buttonFoot}>
                 <div className="pt-0 h-44 relative overflow-hidden">
                     {/* Background image layer */}
@@ -139,14 +140,19 @@ function Order({ service }) {
                                 {service.name}
                             </h2>
                         </div>
-                        <p className="text-gray-100 font-light text-[11px]">
-                            {service.description}
-                        </p>
                     </div>
                 </div>
 
                 <main className="p-4 relative bottom-5 z-10 rounded-t-3xl bg-white">
                     <section className="space-y-6">
+                        <div>
+                            <article
+                                style={{ whiteSpace: "pre-wrap" }}
+                                className="prose text-gray-800 text-xs"
+                            >
+                                {parse(service.description)}
+                            </article>
+                        </div>
                         {/* Input Berat */}
                         <div className="space-y-2">
                             <h2 className="font-semibold text-gray-800 text-base">

@@ -4,15 +4,19 @@ import { route } from "ziggy-js";
 import logo from "../../../public/assets/logo.png";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import { Card } from "@/Components/Card";
 import { Header } from "@/Components/Header";
 import SmalCard from "@/Components/SmalCard";
 import Caraosel from "@/Components/Caraosel";
 import Reviewer from "@/Components/Reviewer";
+import Greeting from "@/Components/Greeting";
 
 export default function Beranda({ services }) {
     const [isLoading, setIsLoading] = useState(true); // loading state
+    const { app } = usePage().props;
+    const siteLogo = app.logo
+
 
     useEffect(() => {
         // Simulasi loading selama 1 detik
@@ -23,17 +27,13 @@ export default function Beranda({ services }) {
         return () => clearTimeout(timer);
     }, []);
 
- 
-
-    
-
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-screen bg-white">
                 <div className="text-center">
                     {/* <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin mx-auto mb-4"></div> */}
                     <img
-                        src={logo}
+                        src={!siteLogo ? logo : `storage/${siteLogo}`}
                         className="animate-bounce mt-0 w-28"
                         alt=""
                     />
@@ -47,7 +47,7 @@ export default function Beranda({ services }) {
         <Main>
             <Header />
 
-           <Caraosel/>
+            <Caraosel />
 
             {/* Enhanced Services Section */}
             <div className="px-4 mb-8">
@@ -72,8 +72,9 @@ export default function Beranda({ services }) {
                 </div>
             </div>
 
+             <Greeting/>           
             {/* Enhanced Active Orders */}
-            <div className="px-4 mb-10">
+            {/* <div className="px-4 mb-10">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base font-bold text-gray-900">
                         Mau Order Apa Hari Ini ?
@@ -94,9 +95,9 @@ export default function Beranda({ services }) {
                             <Card key={service.id} service={service} />
                         ))}
                 </div>
-            </div>
+            </div> */}
 
-           <Reviewer services={services} />
+            <Reviewer services={services} />
         </Main>
     );
 }
